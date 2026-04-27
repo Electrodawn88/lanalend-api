@@ -1,0 +1,18 @@
+[2026-04-27 15:37:19] | [DEBUG] | Registro recibido: email=user1@test.com
+[2026-04-27 15:37:19] | [WARN] | Registro duplicado: email=user1@test.com
+[2026-04-27 15:37:28] | [DEBUG] | Registro recibido: email=user3@test.com
+[2026-04-27 15:37:29] | [INFO] | Registro exitoso: email=user3@test.com
+[2026-04-27 15:38:04] | [DEBUG] | Registro recibido: email=user3@test.com
+[2026-04-27 15:38:04] | [WARN] | Registro duplicado: email=user3@test.com
+[2026-04-27 15:40:28] | [DEBUG] | Login recibido: email=user3@test.com
+[2026-04-27 15:40:29] | [WARN] | Login fallido (credenciales inválidas): email=user3@test.com
+[2026-04-27 15:41:18] | [DEBUG] | Login recibido: email=user3@test.com
+[2026-04-27 15:41:19] | [INFO] | Login exitoso: userId=2 role=cliente token=eyJhbGciOi...xmyuTw
+[2026-04-27 15:43:39] | [DEBUG] | Login recibido: email=(null)
+[2026-04-27 15:43:40] | [WARN] | Login inválido (datos inválidos): email=(null)
+[2026-04-27 15:48:00] | [DEBUG] | Solicitud recibida: userId=2 amount=5000 termMonths=6 purpose="Emergencia médica"
+[2026-04-27 15:48:00] | [INFO] | Solicitud creada: loanId=2 userId=2 amount=5000
+[2026-04-27 15:49:06] | [DEBUG] | Solicitud recibida: userId=2 amount=1000 termMonths=6 purpose="<script>alert(1)</script>"
+[2026-04-27 15:49:06] | [WARN] | Solicitud inválida: userId=2
+[2026-04-27 15:55:51] | [DEBUG] | Registro recibido: email=user4@test.com
+[2026-04-27 15:55:51] | [ERROR] | Error en registro: SQLITE_ERROR: no such table: usuarios

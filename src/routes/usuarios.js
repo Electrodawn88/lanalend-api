@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { dbGet, dbRun } = require("../db");
+const logger = require("../logger");
 
 const router = express.Router();
 
@@ -9,31 +10,49 @@ function isValidEmail(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+
+function maskToken(token) {
+  if (!token || typeof token !== "string") return "(sin token)";
+  return `${token.slice(0, 10)}...${token.slice(-6)}`;
+}
+
 router.post("/registro", async (req, res) => {
   try {
     const { email, password } = req.body ?? {};
 
-    // Validaciones (seguras y claras)
+    
+    logger.debug(`Registro recibido: email=${email ?? "(null)"}`);
+
+    
     if (!isValidEmail(email) || typeof password !== "string" || password.length < 9) {
+      
+      logger.warn(`Registro inválido: email=${email ?? "(null)"}`);
       return res.status(400).json({ error: "Datos inválidos" });
     }
 
-    // Duplicados (parametrizado)
+    
     const exists = await dbGet("SELECT id FROM usuarios WHERE email = ?", [email]);
-    if (exists) return res.status(409).json({ error: "El usuario ya existe" });
+    if (exists) {
+      logger.warn(`Registro duplicado: email=${email}`);
+      return res.status(409).json({ error: "El usuario ya existe" });
+    }
 
-    // Hash
+    
     const password_hash = await bcrypt.hash(password, 12);
 
-    // Insert parametrizado
-    await dbRun(
-      "INSERT INTO usuarios (email, password_hash) VALUES (?, ?)",
-      [email, password_hash]
-    );
+    
+    await dbRun("INSERT INTO usuarios (email, password_hash) VALUES (?, ?)", [
+      email,
+      password_hash,
+    ]);
+
+    
+    logger.info(`Registro exitoso: email=${email}`);
 
     return res.status(201).json({ message: "Usuario registrado" });
   } catch (err) {
-    console.error("Error registro:", err);
+    
+    logger.error(`Error en registro: ${err.message}`);
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 });
@@ -42,7 +61,10 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body ?? {};
 
+    logger.debug(`Login recibido: email=${email ?? "(null)"}`);
+
     if (!isValidEmail(email) || typeof password !== "string") {
+      logger.warn(`Login inválido (datos inválidos): email=${email ?? "(null)"}`);
       return res.status(400).json({ error: "Datos inválidos" });
     }
 
@@ -53,10 +75,16 @@ router.post("/login", async (req, res) => {
     );
 
     // Mensaje genérico (evita enumeración)
-    if (!user) return res.status(401).json({ error: "Credenciales inválidas" });
+    if (!user) {
+      logger.warn(`Login fallido (credenciales inválidas): email=${email}`);
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
 
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: "Credenciales inválidas" });
+    if (!ok) {
+      logger.warn(`Login fallido (credenciales inválidas): email=${email}`);
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
 
     // JWT payload SIN datos sensibles (solo identificadores)
     const payload = { userId: user.id, role: user.role };
@@ -64,9 +92,14 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
+    // INFO: camino feliz (token enmascarado)
+    logger.info(
+      `Login exitoso: userId=${user.id} role=${user.role} token=${maskToken(token)}`
+    );
+
     return res.status(200).json({ token });
   } catch (err) {
-    console.error("Error login:", err);
+    logger.error(`Error en login: ${err.message}`);
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 });
