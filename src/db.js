@@ -14,7 +14,7 @@ function dbRun(sql, params = []) {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
       if (err) reject(err);
-      else resolve(this); // this.lastID
+      else resolve(this); 
     });
   });
 }

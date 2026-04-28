@@ -68,13 +68,13 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Datos inválidos" });
     }
 
-    // Buscar usuario (parametrizado)
+    
     const user = await dbGet(
       "SELECT id, email, password_hash, role FROM usuarios WHERE email = ?",
       [email]
     );
 
-    // Mensaje genérico (evita enumeración)
+    
     if (!user) {
       logger.warn(`Login fallido (credenciales inválidas): email=${email}`);
       return res.status(401).json({ error: "Credenciales inválidas" });
@@ -86,13 +86,13 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
 
-    // JWT payload SIN datos sensibles (solo identificadores)
+    
     const payload = { userId: user.id, role: user.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET || "dev_secret_change_me", {
       expiresIn: "1h",
     });
 
-    // INFO: camino feliz (token enmascarado)
+    
     logger.info(
       `Login exitoso: userId=${user.id} role=${user.role} token=${maskToken(token)}`
     );
